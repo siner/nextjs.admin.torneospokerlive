@@ -82,17 +82,20 @@ export const columns: ColumnDef<Torneo>[] = [
       return (
         <div className="flex items-center justify-end gap-2">
           <Button variant="outline" className="h-6 w-6 p-0">
-            <Link href={"/torneos/" + torneo.slug} target="_blank">
+            <a
+              href={"https://torneospokerlive.com/torneos/" + torneo.slug}
+              target="_blank"
+            >
               <SquareArrowOutUpRight className="h-4 w-4" />
-            </Link>
+            </a>
           </Button>
           <Button variant="outline" className="h-6 w-6 p-0">
-            <Link href={"/admin/torneos/clone/" + torneo.id}>
+            <Link href={"/dashboard/torneos/clone/" + torneo.id}>
               <Copy className="h-4 w-4" />
             </Link>
           </Button>
           <Button variant="outline" className="h-6 w-6 p-0">
-            <Link href={"/admin/torneos/edit/" + torneo.id}>
+            <Link href={"/dashboard/torneos/edit/" + torneo.id}>
               <Pencil className="h-4 w-4" />
             </Link>
           </Button>

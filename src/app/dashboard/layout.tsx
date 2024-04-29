@@ -51,7 +51,7 @@ export default async function Layout({
     redirect("/error");
   }
   if (user.data[0].role !== "admin") {
-    redirect("/");
+    redirect("/?allowed=false");
   }
   return (
     <div className="grid w-full md:grid-cols-[120px_1fr] lg:grid-cols-[180px_1fr]">
@@ -80,14 +80,14 @@ export default async function Layout({
             <SheetContent side="left" className="flex flex-col">
               <nav className="mt-8 text-lg font-medium flex flex-col gap-4">
                 <SheetClose asChild>
-                  <Link href="/admin" className="flex items-center gap-2">
+                  <Link href="/dashboard" className="flex items-center gap-2">
                     <Home className="h-4 w-4" />
                     Dashboard
                   </Link>
                 </SheetClose>
                 <SheetClose asChild>
                   <Link
-                    href="/admin/usuarios"
+                    href="/dashboard/usuarios"
                     className="flex items-center gap-2"
                   >
                     <CircleUser className="h-4 w-4" />
@@ -96,7 +96,7 @@ export default async function Layout({
                 </SheetClose>
                 <SheetClose asChild>
                   <Link
-                    href="/admin/casinos"
+                    href="/dashboard/casinos"
                     className="flex items-center gap-2"
                   >
                     <Building className="h-4 w-4" />
@@ -105,7 +105,7 @@ export default async function Layout({
                 </SheetClose>
                 <SheetClose asChild>
                   <Link
-                    href="/admin/circuitos"
+                    href="/dashboard/circuitos"
                     className="flex items-center gap-2"
                   >
                     <Trophy className="h-4 w-4" />
@@ -114,7 +114,7 @@ export default async function Layout({
                 </SheetClose>
                 <SheetClose asChild>
                   <Link
-                    href="/admin/eventos"
+                    href="/dashboard/eventos"
                     className="flex items-center gap-2"
                   >
                     <CalendarDays className="h-4 w-4" />
@@ -123,7 +123,7 @@ export default async function Layout({
                 </SheetClose>
                 <SheetClose asChild>
                   <Link
-                    href="/admin/torneos"
+                    href="/dashboard/torneos"
                     className="flex items-center gap-2"
                   >
                     <CalendarClock className="h-4 w-4" />

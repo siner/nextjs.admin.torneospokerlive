@@ -42,31 +42,7 @@ export default async function Header() {
   }
 
   return (
-    <header className="sticky top-0 flex justify-between h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="shrink-0 lg:hidden">
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle navigation menu</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left">
-          <nav className="grid gap-6 text-lg font-medium">
-            <SheetClose asChild>
-              <Link href="/circuitos">Circuitos</Link>
-            </SheetClose>
-            <SheetClose asChild>
-              <Link href="/eventos">Eventos</Link>
-            </SheetClose>
-            <SheetClose asChild>
-              <Link href="/torneos">Torneos</Link>
-            </SheetClose>
-            <SheetClose asChild>
-              <Link href="/casinos">Casinos</Link>
-            </SheetClose>
-          </nav>
-        </SheetContent>
-      </Sheet>
+    <header className="sticky top-0 w-full flex justify-between h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
       <Link href="/" className="flex items-center gap-2 font-bold text-lg">
         <svg
           width="33"
@@ -90,12 +66,7 @@ export default async function Header() {
         </svg>
         <h1 className="w-[180px]">Torneos Poker Live</h1>
       </Link>
-      <nav className="hidden flex-col gap-6 text-lg font-medium lg:flex lg:flex-row lg:items-center lg:gap-5 lg:text-sm">
-        <Navigation />
-      </nav>
-      <div className="flex md:w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
-        <SearchBar />
-
+      <div className="flex md:w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="icon" className="rounded-full">
@@ -110,26 +81,16 @@ export default async function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {logged && (
-              <>
-                <DropdownMenuItem asChild>
-                  <Link href="/ajustes">Mi perfil</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/ajustes/mis-casinos">Mis casinos</Link>
-                </DropdownMenuItem>
-              </>
-            )}
             {!logged && (
               <>
                 <DropdownMenuItem asChild>
-                  <Link href="/login">Login</Link>
+                  <Link href="/">Login</Link>
                 </DropdownMenuItem>
               </>
             )}
             {admin && (
               <DropdownMenuItem asChild>
-                <Link href="/admin">Admin</Link>
+                <Link href="/dashboard">Dashboard</Link>
               </DropdownMenuItem>
             )}
             {logged && (

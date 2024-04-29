@@ -69,12 +69,15 @@ export const columns: ColumnDef<Casino>[] = [
       return (
         <div className="flex items-center justify-end gap-2">
           <Button variant="outline" className="h-6 w-6 p-0">
-            <Link href={"/casinos/" + casino.slug} target="_blank">
+            <a
+              href={"https://torneospokerlive.com/casinos/" + casino.slug}
+              target="_blank"
+            >
               <SquareArrowOutUpRight className="h-4 w-4" />
-            </Link>
+            </a>
           </Button>
           <Button variant="outline" className="h-6 w-6 p-0">
-            <Link href={"/admin/casinos/edit/" + casino.id}>
+            <Link href={"/dashboard/casinos/edit/" + casino.id}>
               <Pencil className="h-4 w-4" />
             </Link>
           </Button>

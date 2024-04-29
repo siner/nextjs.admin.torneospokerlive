@@ -4,27 +4,43 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 export default function Login() {
   const searchParams = useSearchParams();
   const urlSuccess = searchParams.get("success");
   const urlFail = searchParams.get("error");
+  const urlAllowed = searchParams.get("allowed");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fail, setFail] = useState(urlFail ? true : false);
   const [success, setSuccess] = useState(urlSuccess ? true : false);
+  const [allowed, setAllowed] = useState(
+    urlAllowed && urlAllowed === "false" ? false : true
+  );
   const [logged, setLogged] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     if (logged) {
-      router.refresh();
+      router.push("/dashboard");
       return;
     }
   }, [logged, router]);
+
+  useEffect(() => {
+    if (!allowed) {
+      logout();
+      router.refresh();
+    }
+  }, [allowed, router]);
+
+  async function logout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+  }
 
   async function emailLogin() {
     const supabase = createClient();
@@ -76,6 +92,11 @@ export default function Login() {
         </div>
         {fail && (
           <div className="text-red-500 text-sm">Credenciales incorrectas</div>
+        )}
+        {!allowed && (
+          <div className="text-red-500 text-sm">
+            No tienes permisos para acceder a esta página
+          </div>
         )}
         <Button onClick={emailLogin} type="submit" className="w-full">
           Login
