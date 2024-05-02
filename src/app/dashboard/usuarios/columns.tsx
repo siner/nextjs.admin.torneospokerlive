@@ -6,15 +6,39 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Pencil, SquareArrowOutUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 
 export type User = {
   id: string;
   name: string;
   surname: string;
   username: string;
+  avatar: string;
+  email: string;
 };
 
 export const columns: ColumnDef<User>[] = [
+  {
+    accessorKey: "avatar",
+    header: "",
+    cell: ({ row }) => {
+      const user = row.original;
+      const avatar = user.avatar;
+      const avatarName = user.username ? user.username : user.email;
+
+      return (
+        <Avatar>
+          <AvatarImage
+            src={
+              avatar
+                ? `https://wsrv.nl/?url=${avatar}&w=100&h=100&fit=cover&mask=circle`
+                : `https://ui-avatars.com/api/?name=${avatarName}&s=100&background=random`
+            }
+          />
+        </Avatar>
+      );
+    },
+  },
   {
     accessorKey: "email",
     header: ({ column }) => (
