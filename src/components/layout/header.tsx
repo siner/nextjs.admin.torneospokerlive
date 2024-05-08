@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { CircleUser, Menu, Search } from "lucide-react";
+import { CircleUser } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,16 +9,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetClose,
-} from "@/components/ui/sheet";
 
 import { createClient } from "@/lib/supabase/server";
-import Navigation from "./navigation";
-import SearchBar from "./search";
+import { Avatar, AvatarImage } from "../ui/avatar";
 
 export default async function Header() {
   const supabase = createClient();
@@ -27,17 +20,19 @@ export default async function Header() {
   const { data } = await supabase.auth.getUser();
   var role = null;
   var avatarName = data?.user?.email;
+  var avatar = null;
   if (data?.user) {
     logged = true;
     role = await supabase
       .from("user")
-      .select("role, username")
+      .select("role, username, avatar")
       .eq("id", data?.user?.id);
     if (!role.error && role.data.length !== 0) {
       if (role.data[0].role === "admin") {
         admin = true;
       }
       if (role.data[0].username) avatarName = role.data[0].username;
+      if (role.data[0].avatar) avatar = role.data[0].avatar;
     }
   }
 
@@ -71,11 +66,15 @@ export default async function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="icon" className="rounded-full">
               {logged && (
-                <img
-                  src={`https://ui-avatars.com/api/?name=${avatarName}&s=100&background=random`}
-                  alt="Avatar"
-                  className="rounded-full w-8 h-8"
-                />
+                <Avatar>
+                  <AvatarImage
+                    src={
+                      avatar
+                        ? `https://wsrv.nl/?url=${avatar}&w=100&h=100&fit=cover&mask=circle`
+                        : `https://ui-avatars.com/api/?name=${avatarName}&s=100&background=random`
+                    }
+                  />
+                </Avatar>
               )}
               {!logged && <CircleUser className="h-5 w-5" />}
             </Button>
