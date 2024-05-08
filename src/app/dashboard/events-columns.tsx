@@ -30,7 +30,7 @@ export type Event = {
   draft: boolean;
 };
 
-export const columns: ColumnDef<Event>[] = [
+export const eventsColumns: ColumnDef<Event>[] = [
   {
     accessorKey: "id",
     header: ({ column }) => (
@@ -76,7 +76,7 @@ export const columns: ColumnDef<Event>[] = [
     ),
   },
   {
-    accessorKey: "dradft",
+    accessorKey: "draft",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Draft" />
     ),

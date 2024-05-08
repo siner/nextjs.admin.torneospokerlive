@@ -28,6 +28,7 @@ import { useState } from "react";
 import { RefreshCcw, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 
 export default function FormTorneo({
   torneo,
@@ -50,6 +51,7 @@ export default function FormTorneo({
   const [fee, setFee] = useState(torneo ? torneo.fee : "");
   const [points, setPoints] = useState(torneo ? torneo.points : "");
   const [leveltime, setLeveltime] = useState(torneo ? torneo.leveltime : "");
+  const [draft, setDraft] = useState(torneo ? torneo.draft : null);
   const [punctuality, setPunctuality] = useState(
     torneo ? torneo.punctuality : ""
   );
@@ -97,6 +99,7 @@ export default function FormTorneo({
           punctuality,
           bounty,
           content,
+          draft,
         })
         .then(() => {
           setLoading(false);
@@ -121,6 +124,7 @@ export default function FormTorneo({
           punctuality,
           bounty,
           content,
+          draft,
         })
         .eq("id", torneo.id)
         .then(() => {
@@ -322,6 +326,10 @@ export default function FormTorneo({
             defaultValue={content}
             onChange={(e) => setContent(e.target.value)}
           />
+        </div>
+        <div className="flex items-center space-x-4">
+          <Label htmlFor="draft">Draft</Label>
+          <Switch checked={draft} onCheckedChange={() => setDraft(!draft)} />
         </div>
 
         <div className="flex justify-end gap-4">

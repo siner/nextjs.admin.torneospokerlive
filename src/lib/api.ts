@@ -11,6 +11,18 @@ export async function getAllTournaments() {
   return data;
 }
 
+export async function getAllDraftTournaments() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("Tournament")
+    .select("*, casinoId, casino:Casino(*), event:Event(*, tour:Tour(*))")
+    .eq("draft", true)
+    .order("date", { ascending: false })
+    .order("time", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
 export async function getTournamentById(id: number) {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -75,6 +87,17 @@ export async function getAllEvents() {
   const { data, error } = await supabase
     .from("Event")
     .select("*, tour:Tour(*), casino:Casino(*)")
+    .order("from", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function getAllDraftEvents() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("Event")
+    .select("*, tour:Tour(*), casino:Casino(*)")
+    .eq("draft", true)
     .order("from", { ascending: false });
   if (error) throw error;
   return data;

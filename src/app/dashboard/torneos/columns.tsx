@@ -27,6 +27,7 @@ export type Torneo = {
   time: string;
   casino: Casino;
   event: Event;
+  draft: boolean;
 };
 
 export const columns: ColumnDef<Torneo>[] = [
@@ -73,6 +74,16 @@ export const columns: ColumnDef<Torneo>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Hora" />
     ),
+  },
+  {
+    accessorKey: "draft",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Draft" />
+    ),
+    cell: ({ row }) => {
+      const torneo = row.original;
+      return torneo.draft ? "Sí" : "";
+    },
   },
   {
     id: "actions",
