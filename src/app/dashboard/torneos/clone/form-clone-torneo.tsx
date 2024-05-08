@@ -115,7 +115,7 @@ export default function FormCloneTorneo({
       .then(() => {
         setLoading(false);
         toast({ description: "Torneo creado" });
-        router.push("/admin/torneos");
+        router.push("/dashboard/torneos");
       });
   }
 
@@ -317,7 +317,7 @@ export default function FormCloneTorneo({
           <Button size="sm" onClick={() => cloneTorneo()} disabled={loading}>
             {loading ? "Guardando ..." : "Guardar"}
           </Button>
-          <Link href="/admin/torneos">
+          <Link href="/dashboard/torneos">
             <Button size="sm" variant="outline">
               Cancelar
             </Button>

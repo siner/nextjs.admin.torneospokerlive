@@ -82,7 +82,7 @@ export default function FormCasino({ casino }: { casino: any }) {
         .then(() => {
           setLoading(false);
           toast({ description: "Casino creado" });
-          router.push("/admin/casinos");
+          router.push("/dashboard/casinos");
         });
     } else {
       supabase
@@ -184,7 +184,7 @@ export default function FormCasino({ casino }: { casino: any }) {
           <Button size="sm" onClick={() => updateCasino()} disabled={loading}>
             {loading ? "Guardando ..." : "Guardar"}
           </Button>
-          <Link href="/admin/casinos">
+          <Link href="/dashboard/casinos">
             <Button size="sm" variant="outline">
               Cancelar
             </Button>

@@ -84,7 +84,7 @@ export default function FormEvento({
         .then(() => {
           setLoading(false);
           toast({ description: "Evento creado" });
-          router.push("/admin/eventos");
+          router.push("/dashboard/eventos");
         });
     } else {
       supabase
@@ -233,7 +233,7 @@ export default function FormEvento({
           <Button size="sm" onClick={() => updateEvento()} disabled={loading}>
             {loading ? "Guardando ..." : "Guardar"}
           </Button>
-          <Link href="/admin/eventos">
+          <Link href="/dashboard/eventos">
             <Button size="sm" variant="outline">
               Cancelar
             </Button>

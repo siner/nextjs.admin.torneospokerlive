@@ -69,7 +69,7 @@ export function TournamentsDataTable<TData, TValue>({
           className="max-w-sm"
         />
 
-        <Link href="/admin/torneos/edit">
+        <Link href="/dashboard/torneos/edit">
           <Button>Nuevo Torneo</Button>
         </Link>
       </div>
