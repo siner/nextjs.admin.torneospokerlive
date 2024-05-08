@@ -27,6 +27,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { RefreshCcw, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Switch } from "@/components/ui/switch";
 
 export default function FormEvento({
   evento,
@@ -45,6 +46,7 @@ export default function FormEvento({
   const [tourId, setTourId] = useState(evento ? evento.tourId : null);
   const [from, setFrom] = useState(evento ? evento.from : "");
   const [to, setTo] = useState(evento ? evento.to : "");
+  const [draft, setDraft] = useState(evento ? evento.draft : null);
   const [error, setError] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -77,6 +79,7 @@ export default function FormEvento({
           tourId,
           from: date_from,
           to: date_to,
+          draft,
         })
         .then(() => {
           setLoading(false);
@@ -93,6 +96,7 @@ export default function FormEvento({
           tourId,
           from: date_from,
           to: date_to,
+          draft,
         })
         .eq("id", evento.id)
         .then(() => {
@@ -219,6 +223,10 @@ export default function FormEvento({
                 />
               </PopoverContent>
             </Popover>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Label htmlFor="draft">Draft</Label>
+            <Switch checked={draft} onCheckedChange={() => setDraft(!draft)} />
           </div>
         </div>
         <div className="flex justify-end gap-4">
