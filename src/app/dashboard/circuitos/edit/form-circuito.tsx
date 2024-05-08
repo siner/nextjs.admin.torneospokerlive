@@ -78,7 +78,7 @@ export default function FormCircuito({ circuito }: { circuito: any }) {
         .then(() => {
           setLoading(false);
           toast({ description: "Circuito creado" });
-          router.push("/admin/circuitos");
+          router.push("/dashboard/circuitos");
         });
     } else {
       supabase
@@ -158,7 +158,7 @@ export default function FormCircuito({ circuito }: { circuito: any }) {
           <Button size="sm" onClick={() => updateCircuito()} disabled={loading}>
             {loading ? "Guardando ..." : "Guardar"}
           </Button>
-          <Link href="/admin/circuitos">
+          <Link href="/dashboard/circuitos">
             <Button size="sm" variant="outline">
               Cancelar
             </Button>

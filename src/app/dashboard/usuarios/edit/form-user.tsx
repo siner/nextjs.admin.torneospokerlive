@@ -30,7 +30,7 @@ export default function FormUser({ user }: { user: any }) {
         .then(() => {
           setLoading(false);
           toast({ description: "Usuario creado" });
-          router.push("/admin/usuarios");
+          router.push("/dashboard/usuarios");
         });
     } else {
       supabase
@@ -88,7 +88,7 @@ export default function FormUser({ user }: { user: any }) {
           <Button size="sm" onClick={() => updateUser()} disabled={loading}>
             {loading ? "Guardando ..." : "Guardar"}
           </Button>
-          <Link href="/admin/usuarios">
+          <Link href="/dashboard/usuarios">
             <Button size="sm" variant="outline">
               Cancelar
             </Button>

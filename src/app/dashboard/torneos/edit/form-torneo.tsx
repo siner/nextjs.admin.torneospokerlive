@@ -104,7 +104,7 @@ export default function FormTorneo({
         .then(() => {
           setLoading(false);
           toast({ description: "Torneo creado" });
-          router.push("/admin/torneos");
+          router.push("/dashboard/torneos");
         });
     } else {
       supabase
@@ -336,7 +336,7 @@ export default function FormTorneo({
           <Button size="sm" onClick={() => updateTorneo()} disabled={loading}>
             {loading ? "Guardando ..." : "Guardar"}
           </Button>
-          <Link href="/admin/torneos">
+          <Link href="/dashboard/torneos">
             <Button size="sm" variant="outline">
               Cancelar
             </Button>

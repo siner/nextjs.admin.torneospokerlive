@@ -77,7 +77,7 @@ export const columns: ColumnDef<User>[] = [
       return (
         <div className="flex items-center justify-end gap-2">
           <Button variant="outline" className="h-6 w-6 p-0">
-            <Link href={"/admin/usuarios/edit/" + user.id}>
+            <Link href={"/dashboard/usuarios/edit/" + user.id}>
               <Pencil className="h-4 w-4" />
             </Link>
           </Button>

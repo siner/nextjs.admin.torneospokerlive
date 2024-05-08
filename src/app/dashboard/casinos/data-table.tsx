@@ -67,7 +67,7 @@ export function DataTable<TData, TValue>({
           }
           className="max-w-sm"
         />
-        <Link href="/admin/casinos/edit">
+        <Link href="/dashboard/casinos/edit">
           <Button>Nuevo Casino</Button>
         </Link>
       </div>
