@@ -29,7 +29,7 @@
     "@sentry/nextjs": "^7.112.2",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/sentry-js-integration": "^0.2.0",
-    "@supabase/ssr": "^0.3.0",
+    "@supabase/ssr": "^0.5.0",
     "@supabase/supabase-js": "^2.42.1",
     "@tanstack/react-table": "^8.15.3",
     "class-variance-authority": "^0.7.0",
