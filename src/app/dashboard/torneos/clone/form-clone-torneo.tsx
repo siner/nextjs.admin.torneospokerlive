@@ -81,8 +81,6 @@ export default function FormCloneTorneo({
       temp_slug += "-" + name.toLowerCase().replace(/ /g, "-");
     }
 
-    console.log(temp_slug);
-
     setSlug(temp_slug);
   }
 
@@ -93,6 +91,10 @@ export default function FormCloneTorneo({
       return;
     }
     setLoading(true);
+    const real_date = new Date(date);
+
+    const fixed_date = format(real_date, "yyyy-MM-dd");
+
     generateSlug();
     supabase
       .from("Tournament")
@@ -101,7 +103,7 @@ export default function FormCloneTorneo({
         slug,
         casinoId,
         eventId,
-        date,
+        date: fixed_date,
         time,
         buyin,
         fee,
