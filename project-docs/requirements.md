@@ -1,0 +1,167 @@
+# Requisitos y Características
+
+## Requisitos del Sistema
+
+- Navegador web moderno (Chrome, Firefox, Safari, Edge).
+- Acceso a internet.
+
+## Descripciones de Características
+
+### Funcionalidad Actual (MVP)
+
+- **Gestión de Torneos:**
+  - **Descripción:** Permite crear, listar, ver, editar, duplicar y eliminar torneos de póker. Incluye detalles como fechas, buy-in, estructura, casino asociado, etc.
+  - **Flujo de Listado (`/dashboard/torneos`):**
+    - La página principal obtiene todos los torneos usando `getAllTournaments()` desde el servidor.
+    - Se muestra una tabla (`DataTable`) con columnas: ID, Nombre, Casino, Evento, Fecha, Hora, Draft.
+    - La tabla permite ordenar por columnas y filtrar por Nombre.
+    - Incluye paginación.
+    - Cada fila tiene acciones:
+      - Ver en sitio público (enlace externo).
+      - Clonar (enlace a `/dashboard/torneos/clone/[id]`).
+      - Editar (enlace a `/dashboard/torneos/edit/[id]`).
+    - Hay un botón "Nuevo Torneo" que enlaza a `/dashboard/torneos/edit`.
+  - **Flujo de Creación (`/dashboard/torneos/edit` invocado por botón "Nuevo Torneo"):**
+    - La página `edit/page.tsx` obtiene lista de Casinos y Eventos.
+    - Renderiza el componente `FormTorneo` pasando `torneo={null}`.
+    - `FormTorneo` muestra un formulario con campos para: Nombre, Slug (autogenerable), Casino (Select), Evento (Select), Fecha (Calendar), Hora, BuyIn, Fee, Puntos, Level Time, Register Levels, Punctuality, Bounty, Draft (Switch), Content (Textarea).
+    - Al guardar, `FormTorneo` valida campos requeridos (Nombre, Slug, Casino, Fecha, Hora, Buyin), formatea la fecha y llama a `supabase.from("Tournament").insert(...)`.
+    - Muestra toast de éxito/error y redirige al listado en caso de éxito.
+  - **Flujo de Edición (`/dashboard/torneos/edit/[id]` invocado por botón editar):**
+    - La página `edit/[id]/page.tsx` obtiene los datos del torneo específico usando `getTournamentById(id)` y las listas de Casinos y Eventos (`getAllCasinos`, `getAllEvents`).
+    - Renderiza el componente `FormTorneo` pasando los datos del `torneo` obtenido, junto con `casinos` y `eventos`.
+    - `FormTorneo` muestra el mismo formulario que en creación, pero con los campos pre-rellenados con los datos del torneo existente.
+    - Al guardar, `FormTorneo` valida campos, formatea fecha y llama a `supabase.from("Tournament").update(...).eq("id", torneo.id)`.
+    - Muestra toast de éxito/error (no redirige automáticamente).
+  - **Flujo de Clonación (`/dashboard/torneos/clone/[id]` invocado por botón clonar):**
+    - La página `clone/[id]/page.tsx` obtiene los datos del torneo original usando `getTournamentById(id)` y las listas de Casinos y Eventos.
+    - Renderiza el componente específico `FormCloneTorneo` pasando los datos del `torneo` original, `casinos` y `eventos`.
+    - `FormCloneTorneo` muestra un formulario similar al de creación/edición, pre-rellenado con los datos del torneo original (excepto el campo 'Draft').
+    - La generación automática del Slug combina fecha, nombre del casino y nombre del torneo para mayor unicidad.
+    - Al guardar, `FormCloneTorneo` valida campos, formatea fecha, regenera el slug y llama _siempre_ a `supabase.from("Tournament").insert(...)`, creando un nuevo torneo.
+    - Muestra toast de éxito/error y redirige al listado en caso de éxito.
+  - **Componentes Clave:**
+    - `src/app/dashboard/torneos/page.tsx`: Página de listado.
+    - `src/app/dashboard/torneos/data-table.tsx`: Componente de tabla interactiva.
+    - `src/app/dashboard/torneos/columns.tsx`: Definición de columnas y acciones.
+    - `src/app/dashboard/torneos/edit/page.tsx`: Página contenedora (obtiene casinos/eventos).
+    - `src/app/dashboard/torneos/edit/form-torneo.tsx`: Componente de formulario reutilizable para crear/editar.
+    - `src/app/dashboard/torneos/edit/[id]/page.tsx`: (Presumiblemente) Página contenedora para edición (obtiene torneo, casinos, eventos).
+    - `src/app/dashboard/torneos/clone/[id]/page.tsx`: Página contenedora para clonación (obtiene torneo original, casinos, eventos).
+    - `src/app/dashboard/torneos/clone/form-clone-torneo.tsx`: Componente de formulario específico para clonar (pre-rellena y fuerza inserción).
+    - `@/lib/api`: Contiene `getAllTournaments`, `getAllCasinos`, `getAllEvents` y `getTournamentById`. La lógica de `insert` está en `FormCloneTorneo`.
+  - **Reglas de Negocio:** (Por definir: validaciones, campos obligatorios, manejo del estado 'draft', relación con casino/evento).
+  - **Casos Límite:** (Por definir: torneos cancelados, slug duplicado, eliminación de torneos referenciados).
+- **Gestión de Casinos:**
+  - **Descripción:** Permite crear, listar, ver y editar información de casinos donde se realizan los torneos (nombre, ubicación, logo, color, etc.).
+  - **Flujo de Listado (`/dashboard/casinos`):**
+    - La página principal obtiene todos los casinos usando `getAllCasinos()` desde el servidor.
+    - Se muestra una tabla (`DataTable`) con columnas: ID, Logo, Nombre, Slug, Color.
+    - La tabla permite ordenar por columnas y filtrar por Nombre.
+    - Incluye paginación.
+    - Cada fila tiene acciones:
+      - Ver en sitio público (enlace externo).
+      - Editar (enlace a `/dashboard/casinos/edit/[id]`).
+    - Hay un botón "Nuevo Casino" que enlaza a `/dashboard/casinos/edit`.
+    - _(Nota: No hay funcionalidad visible de Clonar o Eliminar desde la tabla)._
+  - **Flujo de Creación (`/dashboard/casinos/edit`):**
+    - La página `edit/page.tsx` renderiza directamente `FormCasino` con `casino={null}`.
+    - `FormCasino` muestra campos para: Nombre, Slug (autogenerable), Logo (URL y subida de archivo), Color, Content (Textarea).
+    - La subida de logo envía el archivo a un endpoint CDN externo y guarda la URL resultante.
+    - Al guardar, valida campos y llama a `supabase.from("Casino").insert(...)`.
+    - Redirige al listado tras éxito.
+  - **Flujo de Edición (`/dashboard/casinos/edit/[id]`):**
+    - La página `edit/[id]/page.tsx` obtiene datos con `getCasinoById(id)`.
+    - Renderiza `FormCasino` pasando los datos del `casino`.
+    - Muestra el mismo formulario que creación, pre-rellenado.
+    - La página de edición también muestra una vista previa del logo actual.
+    - Al guardar, valida campos y llama a `supabase.from("Casino").update(...).eq("id", casino.id)`.
+    - No redirige automáticamente.
+  - **Componentes Clave:**
+    - `src/app/dashboard/casinos/page.tsx`: Página de listado.
+    - `src/app/dashboard/casinos/data-table.tsx`: Componente de tabla interactiva.
+    - `src/app/dashboard/casinos/columns.tsx`: Definición de columnas y acciones.
+    - `src/app/dashboard/casinos/edit/page.tsx`: Página contenedora de creación.
+    - `src/app/dashboard/casinos/edit/[id]/page.tsx`: Página contenedora de edición (con preview de logo).
+    - `src/app/dashboard/casinos/edit/form-casino.tsx`: Componente de formulario (incluye lógica de subida de logo a CDN).
+    - `@/lib/api`: Contiene `getAllCasinos`, `getCasinoById`. Lógica Insert/Update en `FormCasino`.
+  - **Reglas de Negocio:** (Por definir: validaciones, formato de color, subida/gestión de logos).
+  - **Casos Límite:** (Por definir: slug duplicado).
+- **Gestión de Eventos:**
+  - **Descripción:** Permite agrupar torneos bajo un evento principal (ej. "European Poker Tour Barcelona"). Permite crear, listar, ver y editar eventos.
+  - **Flujo de Listado (`/dashboard/eventos`):**
+    - La página principal obtiene todos los eventos usando `getAllEvents()` desde el servidor (incluye datos anidados de Casino y Tour).
+    - Se muestra una tabla (`DataTable`) con columnas: ID, Nombre, Casino, Circuito, Desde, Hasta, Draft.
+    - La tabla permite ordenar y filtrar por Nombre.
+    - Incluye paginación.
+    - Cada fila tiene acciones:
+      - Ver en sitio público (enlace externo).
+      - Editar (enlace a `/dashboard/eventos/edit/[id]`).
+    - Hay un botón "Nuevo Evento" que enlaza a `/dashboard/eventos/edit`.
+    - _(Nota: No hay funcionalidad visible de Clonar o Eliminar desde la tabla. Posible error tipográfico en accessorKey 'dradft')._
+  - **Flujo de Creación (`/dashboard/eventos/edit`):**
+    - La página `edit/page.tsx` obtiene listas de Casinos y Circuitos (`getAllCasinos`, `getAllTours`).
+    - Renderiza `FormEvento` con `evento={null}`, `casinos` y `circuitos`.
+    - `FormEvento` muestra campos para: Nombre, Slug (autogenerable), Casino (Select), Circuito (Select), Desde (Calendar), Hasta (Calendar), Draft (Switch).
+    - Al guardar, valida campos, formatea fechas y llama a `supabase.from("Event").insert(...)`.
+    - Redirige al listado tras éxito.
+  - **Flujo de Edición (`/dashboard/eventos/edit/[id]`):**
+    - La página `edit/[id]/page.tsx` obtiene datos del evento (`getEventById(id)`) y listas de Casinos y Circuitos.
+    - Renderiza `FormEvento` pasando los datos del `evento`, `casinos` y `circuitos`.
+    - Muestra el mismo formulario que creación, pre-rellenado.
+    - Al guardar, valida campos, formatea fechas y llama a `supabase.from("Event").update(...).eq("id", evento.id)`.
+    - No redirige automáticamente.
+  - **Componentes Clave:**
+    - `src/app/dashboard/eventos/page.tsx`: Página de listado.
+    - `src/app/dashboard/eventos/data-table.tsx`: Componente de tabla interactiva.
+    - `src/app/dashboard/eventos/columns.tsx`: Definición de columnas y acciones.
+    - `src/app/dashboard/eventos/edit/page.tsx`: Página contenedora de creación (carga casinos/circuitos).
+    - `src/app/dashboard/eventos/edit/[id]/page.tsx`: Página contenedora de edición (carga evento, casinos, circuitos).
+    - `src/app/dashboard/eventos/edit/form-evento.tsx`: Componente de formulario reutilizable.
+    - `@/lib/api`: Contiene `getAllEvents`, `getEventById`, `getAllCasinos`, `getAllTours`. Lógica Insert/Update en `FormEvento`.
+  - **Reglas de Negocio:** (Por definir: validaciones, relación con casino/tour, manejo de fechas 'from'/'to').
+  - **Casos Límite:** (Por definir: slug duplicado, eventos sin torneos asociados).
+- **Gestión de Circuitos:**
+  - **Descripción:** Permite agrupar eventos bajo un circuito o marca (ej. "Estrellas Poker Tour"). Permite crear, listar, ver y editar circuitos.
+  - **Flujo de Listado (`/dashboard/circuitos`):**
+    - La página principal obtiene todos los circuitos (tours) usando `getAllTours()` desde el servidor.
+    - Se muestra una tabla (`DataTable`) con columnas: Logo, Nombre, Slug.
+    - La tabla permite ordenar y filtrar por Nombre.
+    - Incluye paginación.
+    - Cada fila tiene acciones:
+      - Ver en sitio público (enlace externo).
+      - Editar (enlace a `/dashboard/circuitos/edit/[id]`).
+    - Hay un botón "Nuevo Circuito" que enlaza a `/dashboard/circuitos/edit`.
+    - _(Nota: No hay funcionalidad visible de Clonar o Eliminar. La columna Logo intenta usar un campo 'color' inexistente en el tipo Tour, requiere revisión)._
+  - **Flujo de Creación (`/dashboard/circuitos/edit`):**
+    - La página `edit/page.tsx` renderiza `FormCircuito` con `circuito={null}`. _(Nota: Enlace 'Back' incorrecto)._
+    - `FormCircuito` muestra campos para: Nombre, Slug (autogenerable), Logo (URL y subida de archivo).
+    - La subida de logo usa endpoint CDN externo.
+    - Al guardar, valida campos y llama a `supabase.from("Tour").insert(...)`.
+    - Redirige al listado tras éxito.
+  - **Flujo de Edición (`/dashboard/circuitos/edit/[id]`):**
+    - La página `edit/[id]/page.tsx` obtiene datos con `getTourById(id)`. _(Nota: Enlace 'Back' incorrecto)._
+    - Renderiza `FormCircuito` pasando los datos del `circuito`.
+    - Muestra el mismo formulario que creación, pre-rellenado.
+    - La página de edición muestra preview del logo. _(Nota: Intenta usar un campo 'color' inexistente)._
+    - Al guardar, valida campos y llama a `supabase.from("Tour").update(...).eq("id", circuito.id)`.
+    - No redirige automáticamente.
+  - **Componentes Clave:**
+    - `src/app/dashboard/circuitos/page.tsx`: Página de listado.
+    - `src/app/dashboard/circuitos/data-table.tsx`: Componente de tabla interactiva.
+    - `src/app/dashboard/circuitos/columns.tsx`: Definición de columnas y acciones.
+    - `src/app/dashboard/circuitos/edit/page.tsx`: Página contenedora de creación.
+    - `src/app/dashboard/circuitos/edit/[id]/page.tsx`: Página contenedora de edición (con preview de logo).
+    - `src/app/dashboard/circuitos/edit/form-circuito.tsx`: Componente de formulario (incluye subida de logo a CDN, no gestiona color).
+    - `@/lib/api`: Contiene `getAllTours`, `getTourById`. Lógica Insert/Update en `FormCircuito`.
+  - **Reglas de Negocio:** (Por definir: validaciones, subida/gestión de logos).
+  - **Casos Límite:** (Por definir: slug duplicado).
+
+### Mejoras Futuras
+
+- **Optimización de Flujo de Creación/Edición:**
+  - **Descripción:** Analizar y rediseñar los formularios y procesos actuales para hacerlos más intuitivos y rápidos.
+- **Integración de IA/Web Scraping:**
+  - **Descripción:** Desarrollar módulos que puedan extraer información de torneos de sitios web específicos y cuentas de redes sociales (Twitter) para pre-rellenar o sugerir nuevos torneos en el panel.
+  - **Reglas de Negocio:** Definir fuentes, criterios de extracción, proceso de validación/aprobación de datos extraídos.
+  - **Casos Límite:** Fuentes que cambian de formato, información duplicada o incorrecta, necesidad de intervención manual.

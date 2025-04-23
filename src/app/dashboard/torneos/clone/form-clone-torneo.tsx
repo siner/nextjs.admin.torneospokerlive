@@ -1,10 +1,25 @@
 "use client";
 
+import * as React from "react";
+import { useEffect, useState } from "react";
+import { useFormState, useFormStatus } from "react-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { Calendar as CalendarIcon, RefreshCcw } from "lucide-react";
+import { ZodIssue } from "zod";
+
+import { cn } from "@/lib/utils";
+import {
+  upsertTournamentAction, // Reutilizamos la misma acción
+  TournamentActionState,
+} from "@/lib/actions/tournaments";
+// import { TournamentSchema } from "@/lib/schemas"; // No necesitamos el schema aquí
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 import {
   Select,
   SelectContent,
@@ -12,320 +27,402 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format, set } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
-
-import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
-import Link from "next/link";
-import { useState } from "react";
-import { RefreshCcw, Search } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
-import { revalidatePath } from "next/cache";
+import { Switch } from "@/components/ui/switch"; // Asumimos que draft no se clona, empieza en false
+import { useToast } from "@/components/ui/use-toast";
+
+// Tipos (reemplazar any si es posible)
+type Torneo = any;
+type Casino = { id: number; name: string; slug?: string }; // Añadir slug opcional
+type Evento = any;
+
+// Componente SubmitButton (idéntico a form-torneo.tsx)
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={pending} aria-disabled={pending}>
+      {pending ? "Clonando..." : "Clonar Torneo"}
+    </Button>
+  );
+}
+
+// Componente FieldError (idéntico a form-torneo.tsx)
+function FieldError({
+  fieldName,
+  errors,
+}: {
+  fieldName: string;
+  errors?: ZodIssue[] | null;
+}) {
+  const error = errors?.find((e) => e.path.includes(fieldName));
+  if (!error) return null;
+  return (
+    <p className="text-sm font-medium text-destructive">{error.message}</p>
+  );
+}
+
+// Función helper para slugificar (igual que en form-torneo)
+function slugify(text: string): string {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9 -]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
 
 export default function FormCloneTorneo({
-  torneo,
+  torneo, // Torneo original a clonar
   casinos,
   eventos,
 }: {
-  torneo: any;
-  casinos: any[];
-  eventos: any[];
+  torneo: Torneo;
+  casinos: Casino[];
+  eventos: Evento[];
 }) {
-  const supabase = createClient();
-  const [loading, setLoading] = useState(false);
-  const [name, setName] = useState(torneo ? torneo.name : "");
-  const [slug, setSlug] = useState(torneo ? torneo.slug : "");
-  const [casinoId, setCasinoId] = useState(torneo ? torneo.casinoId : null);
-  const [eventId, setEventId] = useState(torneo ? torneo.eventId : null);
-  const [date, setDate] = useState(torneo ? torneo.date : "");
-  const [time, setTime] = useState(torneo ? torneo.time : "");
-  const [buyin, setBuyin] = useState(torneo ? torneo.buyin : "");
-  const [fee, setFee] = useState(torneo ? torneo.fee : "");
-  const [points, setPoints] = useState(torneo ? torneo.points : "");
-  const [leveltime, setLeveltime] = useState(torneo ? torneo.leveltime : "");
-  const [punctuality, setPunctuality] = useState(
-    torneo ? torneo.punctuality : ""
-  );
-  const [bounty, setBounty] = useState(torneo ? torneo.bounty : "");
-  const [registerlevels, setRegisterlevels] = useState(
-    torneo ? torneo.registerlevels : ""
-  );
-  const [content, setContent] = useState(torneo ? torneo.content : "");
-
-  const [error, setError] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
+  const router = useRouter(); // Añadir inicialización
 
-  function generateSlug() {
-    var temp_slug = "";
-    if (date) {
-      temp_slug += format(date, "yyyy-MM-dd");
-    }
-    if (casinoId) {
-      temp_slug +=
-        "-" +
-        casinos
-          .filter((casino) => casino.id === casinoId)[0]
-          .name.toLowerCase()
-          .replace(/ /g, "-");
-    }
-    if (name) {
-      temp_slug += "-" + name.toLowerCase().replace(/ /g, "-");
-    }
+  const initialState: TournamentActionState = {
+    success: false,
+    message: "",
+    errors: null,
+  };
 
-    setSlug(temp_slug);
-  }
+  // Usamos la misma acción upsertTournamentAction
+  const [formState, formAction] = useFormState(
+    upsertTournamentAction,
+    initialState
+  );
 
-  function cloneTorneo() {
-    if (!name || !slug || !casinoId || !date || !time || !buyin) {
-      toast({ description: "Todos los campos son requeridos" });
-      setError(true);
-      return;
-    }
-    setLoading(true);
-    const real_date = new Date(date);
+  // Estados controlados solo para interacción específica
+  const [name, setName] = useState(torneo?.name ?? ""); // Permitir cambiar nombre
+  const [slug, setSlug] = useState(torneo?.slug ?? ""); // Permitir cambiar slug
+  const [date, setDate] = useState<Date | undefined>(
+    torneo?.date ? new Date(torneo.date) : undefined // Permitir cambiar fecha
+  );
+  const [content, setContent] = useState(torneo?.content ?? ""); // Permitir cambiar contenido
+  // Draft no se clona, el nuevo torneo empieza como no borrador por defecto en el schema
+  // const [draft, setDraft] = useState(false);
+  // Nuevos estados
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [selectedCasinoId, setSelectedCasinoId] = useState<string>(
+    String(torneo?.casinoId ?? "")
+  );
 
-    const fixed_date = format(real_date, "yyyy-MM-dd");
-
-    generateSlug();
-    supabase
-      .from("Tournament")
-      .insert({
-        name,
-        slug,
-        casinoId,
-        eventId,
-        date: fixed_date,
-        time,
-        buyin,
-        fee,
-        points,
-        leveltime,
-        registerlevels,
-        punctuality,
-        bounty,
-        content,
-      })
-      .then(() => {
-        setLoading(false);
-        toast({ description: "Torneo creado" });
+  // Efecto para mostrar Toasts
+  useEffect(() => {
+    if (formState.message) {
+      if (formState.success) {
+        // No mostrar toast de éxito si vamos a redirigir inmediatamente
         router.push("/dashboard/torneos");
-      });
-  }
+      } else {
+        // Mostrar toast solo en error
+        toast({
+          description: formState.message,
+          variant: "destructive",
+        });
+      }
+    }
+    // Actualizar dependencias
+  }, [formState, toast, router]);
+
+  // Efecto para generar el slug automáticamente (adaptado para clonar)
+  useEffect(() => {
+    const generateAndSetSlug = () => {
+      if (!date || !selectedCasinoId || !name) {
+        // No generar si faltan datos clave
+        setSlug(""); // Limpiar si faltan datos en clonación
+        return;
+      }
+
+      const datePart = format(date, "yyyy-MM-dd");
+      const casino = casinos.find((c) => String(c.id) === selectedCasinoId);
+      const casinoPart = casino ? casino.slug || slugify(casino.name) : "";
+      const namePart = slugify(name);
+
+      if (datePart && casinoPart && namePart) {
+        // Asegurar que tenemos todas las partes
+        setSlug(`${datePart}-${casinoPart}-${namePart}`);
+      } else {
+        setSlug("");
+      }
+    };
+    generateAndSetSlug();
+  }, [name, date, selectedCasinoId, casinos]); // Quitar isEditing y torneo.slug de dependencias
 
   return (
-    <>
+    // La acción es la misma, no pasamos ID oculto
+    <form action={formAction}>
       <div className="grid gap-6">
+        {/* Nombre y Slug (Controlados) */}
         <div className="grid md:grid-cols-2 gap-3">
           <div>
             <Label htmlFor="name">Nombre</Label>
             <Input
               id="name"
-              type="text"
               name="name"
-              className={"w-full " + (error && !name ? "border-red-500" : "")}
-              defaultValue={name}
+              type="text"
+              value={name} // Controlado
               onChange={(e) => setName(e.target.value)}
+              aria-invalid={
+                !!formState.errors?.find((e) => e.path.includes("name"))
+              }
+              aria-describedby="name-error"
             />
+            <FieldError fieldName="name" errors={formState.errors} />
           </div>
           <div>
-            <Label htmlFor="slug">Slug</Label>
+            <Label htmlFor="slug">Slug (Auto-generado)</Label>
             <div className="relative">
-              <RefreshCcw
-                onClick={() => generateSlug()}
-                className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground"
-              />
+              {/* Botón RefreshCcw eliminado */}
               <Input
                 id="slug"
-                type="text"
                 name="slug"
-                className="w-full"
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
+                type="text"
+                value={slug} // Controlado por useEffect
+                readOnly // Hacerlo readOnly
+                aria-invalid={
+                  !!formState.errors?.find((e) => e.path.includes("slug"))
+                }
+                aria-describedby="slug-error"
               />
             </div>
+            <FieldError fieldName="slug" errors={formState.errors} />
           </div>
         </div>
+
+        {/* Casino, Evento, Fecha, Hora (Usan defaultValue del torneo original) */}
         <div className="grid md:grid-cols-4 gap-3">
           <div>
-            <Label htmlFor="logo">Casino</Label>
-            <Select value={casinoId} onValueChange={(e) => setCasinoId(e)}>
+            <Label htmlFor="casinoId">Casino</Label>
+            <Select
+              name="casinoId"
+              value={selectedCasinoId} // Controlado
+              onValueChange={setSelectedCasinoId} // Actualiza estado que dispara useEffect
+              aria-invalid={
+                !!formState.errors?.find((e) => e.path.includes("casinoId"))
+              }
+              aria-describedby="casinoId-error"
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Casino" />
+                <SelectValue placeholder="Selecciona Casino" />
               </SelectTrigger>
               <SelectContent>
+                {/* No ponemos item vacío deshabilitado */}
                 {casinos.map((casino) => (
-                  <SelectItem key={casino.id} value={casino.id}>
+                  <SelectItem key={casino.id} value={String(casino.id)}>
                     {casino.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <FieldError fieldName="casinoId" errors={formState.errors} />
           </div>
           <div>
-            <Label htmlFor="logo">Evento</Label>
-            <Select value={eventId} onValueChange={(e) => setEventId(e)}>
+            <Label htmlFor="eventId">Evento (Opcional)</Label>
+            <Select
+              name="eventId"
+              defaultValue={String(torneo?.eventId ?? "")} // Prellenado
+              aria-invalid={
+                !!formState.errors?.find((e) => e.path.includes("eventId"))
+              }
+              aria-describedby="eventId-error"
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Evento" />
+                <SelectValue placeholder="Selecciona Evento" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="-">Sin evento asociado</SelectItem>{" "}
+                {/* Valor no vacío */}
                 {eventos.map((evento: any) => (
-                  <SelectItem key={evento.id} value={evento.id}>
+                  <SelectItem key={evento.id} value={String(evento.id)}>
                     {evento.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <FieldError fieldName="eventId" errors={formState.errors} />
           </div>
-
           <div>
-            <Label htmlFor="date">Fecha</Label>
-            <br />
-            <Popover>
-              <PopoverTrigger asChild>
+            <Label htmlFor="date-trigger">Fecha</Label>
+            {/* Input oculto para enviar la fecha formateada */}
+            <input
+              type="hidden"
+              name="date"
+              value={date ? format(date, "yyyy-MM-dd") : ""}
+            />
+            {/* Controlar Popover con estado isCalendarOpen */}
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <PopoverTrigger asChild id="date-trigger">
                 <Button
                   variant={"outline"}
                   className={cn(
-                    "w-[280px] justify-start text-left font-normal",
+                    "w-full justify-start text-left font-normal",
                     !date && "text-muted-foreground"
                   )}
+                  aria-invalid={
+                    !!formState.errors?.find((e) => e.path.includes("date"))
+                  }
+                  aria-describedby="date-error"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "dd/MM/yyyy") : <span>Fecha</span>}
+                  {date ? (
+                    format(date, "PPP", { locale: es })
+                  ) : (
+                    <span>Selecciona Fecha</span>
+                  )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={setDate}
+                  onSelect={(selectedDate) => {
+                    setDate(selectedDate);
+                    setIsCalendarOpen(false); // Cierra el popover
+                  }}
                   initialFocus
+                  locale={es}
+                  disabled={(date) => date < new Date("1900-01-01")}
                 />
               </PopoverContent>
             </Popover>
+            <FieldError fieldName="date" errors={formState.errors} />
           </div>
           <div>
-            <Label htmlFor="time">Hora</Label>
+            <Label htmlFor="time">Hora (HH:mm)</Label>
             <Input
               id="time"
-              type="text"
               name="time"
-              className={"w-full " + (error && !time ? "border-red-500" : "")}
-              defaultValue={time}
-              onChange={(e) => setTime(e.target.value)}
+              type="time"
+              step="60"
+              defaultValue={torneo?.time ?? ""} // Prellenado
+              aria-invalid={
+                !!formState.errors?.find((e) => e.path.includes("time"))
+              }
+              aria-describedby="time-error"
             />
+            <FieldError fieldName="time" errors={formState.errors} />
           </div>
         </div>
+
+        {/* Resto de campos (usan defaultValue del torneo original) */}
         <div className="grid md:grid-cols-7 gap-3">
           <div>
             <Label htmlFor="buyin">BuyIn</Label>
             <Input
               id="buyin"
-              type="text"
               name="buyin"
-              className={"w-full " + (error && !buyin ? "border-red-500" : "")}
-              defaultValue={buyin}
-              onChange={(e) => setBuyin(e.target.value)}
+              type="text"
+              defaultValue={torneo?.buyin ?? ""} // Prellenado
+              aria-invalid={
+                !!formState.errors?.find((e) => e.path.includes("buyin"))
+              }
+              aria-describedby="buyin-error"
             />
+            <FieldError fieldName="buyin" errors={formState.errors} />
           </div>
           <div>
             <Label htmlFor="fee">Fee</Label>
             <Input
               id="fee"
-              type="text"
               name="fee"
-              className="w-full"
-              defaultValue={fee}
-              onChange={(e) => setFee(e.target.value)}
+              type="text"
+              defaultValue={torneo?.fee ?? ""}
             />
+            <FieldError fieldName="fee" errors={formState.errors} />
           </div>
           <div>
             <Label htmlFor="points">Puntos</Label>
             <Input
               id="points"
-              type="text"
               name="points"
-              className="w-full"
-              defaultValue={points}
-              onChange={(e) => setPoints(e.target.value)}
+              type="text"
+              defaultValue={torneo?.points ?? ""}
             />
+            <FieldError fieldName="points" errors={formState.errors} />
           </div>
           <div>
-            <Label htmlFor="leveltime">Tiempo por nivel</Label>
+            <Label htmlFor="leveltime">T. Nivel (min)</Label>
             <Input
               id="leveltime"
-              type="text"
               name="leveltime"
-              className="w-full"
-              defaultValue={leveltime}
-              onChange={(e) => setLeveltime(e.target.value)}
+              type="text"
+              defaultValue={torneo?.leveltime ?? ""}
             />
+            <FieldError fieldName="leveltime" errors={formState.errors} />
           </div>
           <div>
-            <Label htmlFor="registerlevels">Niveles de registro</Label>
+            <Label htmlFor="registerlevels">Niv. Reg.</Label>
             <Input
               id="registerlevels"
-              type="text"
               name="registerlevels"
-              className="w-full"
-              defaultValue={registerlevels}
-              onChange={(e) => setRegisterlevels(e.target.value)}
+              type="number"
+              defaultValue={torneo?.registerlevels ?? ""}
             />
+            <FieldError fieldName="registerlevels" errors={formState.errors} />
           </div>
           <div>
             <Label htmlFor="punctuality">Puntualidad</Label>
             <Input
               id="punctuality"
-              type="text"
               name="punctuality"
-              className="w-full"
-              defaultValue={punctuality}
-              onChange={(e) => setPunctuality(e.target.value)}
+              type="text"
+              defaultValue={torneo?.punctuality ?? ""}
             />
+            <FieldError fieldName="punctuality" errors={formState.errors} />
           </div>
           <div>
             <Label htmlFor="bounty">Bounty</Label>
             <Input
               id="bounty"
-              type="text"
               name="bounty"
-              className="w-full"
-              defaultValue={bounty}
-              onChange={(e) => setBounty(e.target.value)}
+              type="text"
+              defaultValue={torneo?.bounty ?? ""}
             />
+            <FieldError fieldName="bounty" errors={formState.errors} />
           </div>
         </div>
-        <div className="grid gap-3">
-          <Label htmlFor="content">Content</Label>
 
+        {/* Contenido (Controlado) */}
+        <div>
+          <Label htmlFor="content">Contenido Adicional</Label>
           <Textarea
             id="content"
             name="content"
-            className="w-full h-32"
-            defaultValue={content}
+            value={content} // Controlado
             onChange={(e) => setContent(e.target.value)}
+            rows={5}
           />
+          <FieldError fieldName="content" errors={formState.errors} />
         </div>
 
-        <div className="flex justify-end gap-4">
-          <Button size="sm" onClick={() => cloneTorneo()} disabled={loading}>
-            {loading ? "Guardando ..." : "Guardar"}
+        {/* Draft (Switch) - Empieza desactivado por defecto en el nuevo torneo clonado */}
+        {/* No es necesario un switch aquí si siempre se crea como no-draft */}
+        {/* Si quisiéramos permitir marcarlo como draft al clonar, añadiríamos: */}
+        {/*
+         <div className="flex items-center space-x-2">
+             <Switch id="draft" name="draft" />
+             <Label htmlFor="draft">Guardar como Borrador</Label>
+             <FieldError fieldName="draft" errors={formState.errors} />
+         </div>
+        */}
+
+        {/* Botones */}
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/dashboard/torneos">Cancelar</Link>
           </Button>
-          <Link href="/dashboard/torneos">
-            <Button size="sm" variant="outline">
-              Cancelar
-            </Button>
-          </Link>
+          <SubmitButton />
         </div>
       </div>
-    </>
+    </form>
   );
 }

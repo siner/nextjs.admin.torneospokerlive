@@ -1,0 +1,44 @@
+# Supabase Server-Side Authentication
+
+**Regla:** Al obtener información del usuario autenticado en código que se ejecuta **en el servidor** (Server Actions, Server Components, Route Handlers, Middleware), **SIEMPRE** usar `supabase.auth.getUser()` en lugar de `supabase.auth.getSession()`.
+
+**Motivo:**
+
+`supabase.auth.getSession()` lee la información de la sesión directamente desde el almacenamiento (ej. cookies). Esta información **podría no ser auténtica** si ha sido manipulada.
+`supabase.auth.getUser()` contacta con el servidor Supabase Auth para **validar la sesión** y devolver información del usuario **autenticada y actualizada**, previniendo posibles vulnerabilidades.
+
+**Ejemplo (Correcto ✅):**
+
+```typescript
+// En una Server Action o Server Component
+import { createClient } from "@/lib/supabase/server";
+
+const supabase = await createClient();
+const { data: { user }, error } = await supabase.auth.getUser();
+
+if (error || !user) {
+  // Manejar usuario no autenticado o error
+  return { success: false, error: "Autenticación requerida" };
+}
+
+// Proceder usando user.id, etc.
+const userId = user.id;
+```
+
+**Ejemplo (Incorrecto ❌ para validación en servidor):**
+
+```typescript
+// NO USAR ESTO para validación en el servidor
+const supabase = await createClient();
+// ¡INSEGURO! Lee de cookies, podría estar manipulado.
+const { data: { session }, error } = await supabase.auth.getSession(); 
+
+if (error || !session) {
+    // ...
+}
+
+// Proceder usando session.user.id (potencialmente inseguro)
+const userId = session.user.id;
+```
+
+**Alcance:** Aplicar esta regla en todos los archivos dentro de `src/actions/`, `src/app/` (en Server Components), `src/middleware.ts` (si se usa cliente Supabase), y cualquier otra ubicación donde se realice autenticación del lado del servidor. 

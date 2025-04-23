@@ -26,7 +26,7 @@ export default async function EditTorneo({
             </Button>
           </Link>
           <h1 className="flex-1 shrink-0 whitespace-nowrap text-xl font-semibold tracking-tight sm:grow-0">
-            Crear Evento
+            Crear Torneo
           </h1>
         </div>
         <div className="grid">

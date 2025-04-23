@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { DateRange } from "react-day-picker";
 
 import {
   ColumnDef,
@@ -25,20 +26,38 @@ import { DataTablePagination } from "@/components/datatables/pagination";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Casino } from "./columns";
+import { Event } from "./columns";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  casinos: Casino[];
+  events: Event[];
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  casinos,
+  events,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
+  );
+
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(
+    undefined
   );
 
   const table = useReactTable({
@@ -54,20 +73,79 @@ export function DataTable<TData, TValue>({
     state: {
       sorting,
       columnFilters,
+      pagination: {
+        pageIndex: 0,
+        pageSize: 50,
+      },
     },
+    manualPagination: false,
   });
+
+  React.useEffect(() => {
+    table.getColumn("date")?.setFilterValue(dateRange);
+  }, [dateRange, table]);
 
   return (
     <>
-      <div className="flex items-center justify-between py-4 gap-2">
-        <Input
-          placeholder="Buscar Torneo..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) => {
-            table.getColumn("name")?.setFilterValue(event.target.value);
-          }}
-          className="max-w-sm"
-        />
+      <div className="flex items-center justify-between py-4 gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Input
+            placeholder="Buscar Torneo..."
+            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={(event) => {
+              table.getColumn("name")?.setFilterValue(event.target.value);
+            }}
+            className="max-w-sm"
+          />
+
+          <Select
+            value={
+              (table.getColumn("casinoId")?.getFilterValue() as string) ?? "all"
+            }
+            onValueChange={(value) =>
+              table
+                .getColumn("casinoId")
+                ?.setFilterValue(value === "all" ? undefined : value)
+            }
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filtrar por casino..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los casinos</SelectItem>
+              {casinos.map((casino) => (
+                <SelectItem key={casino.id} value={String(casino.id)}>
+                  {casino.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={
+              (table.getColumn("eventId")?.getFilterValue() as string) ?? "all"
+            }
+            onValueChange={(value) =>
+              table
+                .getColumn("eventId")
+                ?.setFilterValue(value === "all" ? undefined : value)
+            }
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filtrar por evento..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los eventos</SelectItem>
+              {events.map((event) => (
+                <SelectItem key={event.id} value={String(event.id)}>
+                  {event.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <DateRangePicker date={dateRange} onDateChange={setDateRange} />
+        </div>
 
         <Link href="/dashboard/torneos/edit">
           <Button>Nuevo Torneo</Button>

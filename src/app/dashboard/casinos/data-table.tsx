@@ -53,7 +53,12 @@ export function DataTable<TData, TValue>({
     state: {
       sorting,
       columnFilters,
+      pagination: {
+        pageIndex: 0,
+        pageSize: 50,
+      },
     },
+    manualPagination: false,
   });
 
   return (

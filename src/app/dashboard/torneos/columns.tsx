@@ -3,9 +3,11 @@
 
 import { DataTableColumnHeader } from "@/components/datatables/column-header";
 import { ColumnDef } from "@tanstack/react-table";
-import { Copy, Pencil, SquareArrowOutUpRight } from "lucide-react";
+import { Copy, Pencil, SquareArrowOutUpRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { deleteTournamentAction } from "@/lib/actions/tournaments";
+import { DeleteConfirmationDialog } from "@/components/dialogs/delete-confirmation-dialog";
 
 export type Casino = {
   id: number;
@@ -38,6 +40,24 @@ export const columns: ColumnDef<Torneo>[] = [
     ),
   },
   {
+    accessorKey: "casinoId",
+    header: () => null,
+    cell: () => null,
+    filterFn: (row, id, value) => {
+      return String(row.getValue(id)) === value;
+    },
+    enableHiding: false,
+  },
+  {
+    accessorKey: "eventId",
+    header: () => null,
+    cell: () => null,
+    filterFn: (row, id, value) => {
+      return String(row.getValue(id)) === value;
+    },
+    enableHiding: false,
+  },
+  {
     accessorKey: "name",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Nombre" />
@@ -68,6 +88,26 @@ export const columns: ColumnDef<Torneo>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Fecha" />
     ),
+    filterFn: (row, id, value) => {
+      const date = new Date(row.getValue(id));
+      const { from, to } = value as { from?: Date; to?: Date };
+      if (from && !to) {
+        return date >= from;
+      }
+      if (!from && to) {
+        // Ajustar 'to' para incluir todo el día
+        const adjustedTo = new Date(to);
+        adjustedTo.setHours(23, 59, 59, 999);
+        return date <= adjustedTo;
+      }
+      if (from && to) {
+        // Ajustar 'to' para incluir todo el día
+        const adjustedTo = new Date(to);
+        adjustedTo.setHours(23, 59, 59, 999);
+        return date >= from && date <= adjustedTo;
+      }
+      return true; // No filter applied if no dates
+    },
   },
   {
     accessorKey: "time",
@@ -94,24 +134,41 @@ export const columns: ColumnDef<Torneo>[] = [
         <div className="flex items-center justify-end gap-2">
           <Button variant="outline" className="h-6 w-6 p-0">
             <a
-              href={"https://torneospokerlive.com/torneos/" + torneo.slug}
+              href={`https://torneospokerlive.com/torneos/${torneo.slug}`}
               target="_blank"
+              rel="noopener noreferrer"
             >
               <SquareArrowOutUpRight className="h-4 w-4" />
             </a>
           </Button>
           <Button variant="outline" className="h-6 w-6 p-0">
-            <Link href={"/dashboard/torneos/clone/" + torneo.id}>
+            <Link href={`/dashboard/torneos/clone/${torneo.id}`}>
               <Copy className="h-4 w-4" />
             </Link>
           </Button>
           <Button variant="outline" className="h-6 w-6 p-0">
-            <Link href={"/dashboard/torneos/edit/" + torneo.id}>
+            <Link href={`/dashboard/torneos/edit/${torneo.id}`}>
               <Pencil className="h-4 w-4" />
             </Link>
           </Button>
+          <DeleteConfirmationDialog
+            itemName={`el torneo "${torneo.name}"`}
+            itemId={torneo.id}
+            deleteAction={deleteTournamentAction}
+            trigger={
+              <Button
+                variant="destructive"
+                className="h-6 w-6 p-0"
+                title="Eliminar torneo"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            }
+          />
         </div>
       );
     },
+    enableSorting: false,
+    enableHiding: false,
   },
 ];
