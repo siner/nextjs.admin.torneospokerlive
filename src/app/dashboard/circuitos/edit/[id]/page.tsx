@@ -53,9 +53,9 @@ export default async function EditCircuito({
                 >
                   <img
                     alt={circuito.name}
-                    className="aspect-square w-full rounded-md object-cover"
+                    className="aspect-square w-full rounded-md object-contain"
                     height="300"
-                    src={`https://wsrv.nl/?url=${circuito.logo}&w=300&h=300&fit=contain`}
+                    src={circuito.logo}
                     width="300"
                   />
                 </div>

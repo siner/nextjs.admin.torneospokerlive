@@ -69,9 +69,8 @@ export default async function Header() {
                 <Avatar>
                   <AvatarImage
                     src={
-                      avatar
-                        ? `https://wsrv.nl/?url=${avatar}&w=100&h=100&fit=cover&mask=circle`
-                        : `https://ui-avatars.com/api/?name=${avatarName}&s=100&background=random`
+                      avatar ??
+                      `https://ui-avatars.com/api/?name=${avatarName}&s=100&background=random`
                     }
                   />
                 </Avatar>

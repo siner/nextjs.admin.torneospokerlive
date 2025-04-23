@@ -26,11 +26,9 @@ export const columns: ColumnDef<Tour>[] = [
         }}
       >
         <img
-          src={`https://wsrv.nl/?url=${row.getValue(
-            "logo"
-          )}&w=100&h=100&fit=contain&mask=circle`}
+          src={row.getValue("logo")}
           alt="logo"
-          className="h-10 w-10"
+          className="h-10 w-10 object-contain"
         />
       </div>
     ),
