@@ -29,6 +29,18 @@ export type Tour = {
   logo: string;
 };
 
+// *** Wrapper para deleteCircuitAction ***
+const handleDeleteCircuit = async (
+  id: string | number
+): Promise<{ success: boolean; message: string }> => {
+  if (typeof id !== "number") {
+    console.error("ID de circuito inválido (no es número):", id);
+    return { success: false, message: "ID inválido." };
+  }
+  // Llamar a la acción original solo si el ID es un número
+  return deleteCircuitAction(id);
+};
+
 export const columns: ColumnDef<Tour>[] = [
   {
     accessorKey: "logo",
@@ -98,7 +110,7 @@ export const columns: ColumnDef<Tour>[] = [
               <DeleteConfirmationDialog
                 itemId={circuito.id}
                 itemName={circuito.name}
-                deleteAction={deleteCircuitAction}
+                deleteAction={handleDeleteCircuit}
                 trigger={
                   <DropdownMenuItem
                     onSelect={(e) => e.preventDefault()}
