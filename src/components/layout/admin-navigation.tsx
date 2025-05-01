@@ -8,6 +8,9 @@ import {
   CircleUser,
   Home,
   Trophy,
+  Newspaper,
+  Tags,
+  FileText,
 } from "lucide-react";
 
 export default function AdminNavigation() {
@@ -75,6 +78,41 @@ export default function AdminNavigation() {
       >
         <CalendarClock className="h-4 w-4" />
         Torneos
+      </Link>
+      {/* Enlaces Blog */}
+      <Link
+        href="/dashboard/blog/categorias"
+        className={
+          "flex items-center gap-3 px-3 py-2 text-muted-foreground transition-all hover:text-primary " +
+          (pathname === "blog/categorias" || pathname === "blog"
+            ? "text-primary bg-gray-200"
+            : "") // Activo si está en blog o blog/categorias
+        }
+      >
+        <Newspaper className="h-4 w-4" /> {/* Icono Blog */}
+        Categorías
+      </Link>
+      <Link
+        href="/dashboard/blog/tags"
+        className={
+          "flex items-center gap-3 px-3 py-2 text-muted-foreground transition-all hover:text-primary " +
+          (pathname === "blog/tags" ? "text-primary bg-gray-200" : "")
+        }
+      >
+        {/* Podríamos añadir un icono específico para tags o reusar Newspaper con indentación */}
+        <Tags className="h-4 w-4" /> {/* Icono Tags */}
+        Tags
+      </Link>
+      <Link
+        href="/dashboard/blog/posts"
+        className={
+          "flex items-center gap-3 px-3 py-2 text-muted-foreground transition-all hover:text-primary " +
+          (pathname === "blog/posts" ? "text-primary bg-gray-200" : "")
+        }
+      >
+        {/* <span className="ml-7"></span> Indentación simple */}
+        <FileText className="h-4 w-4" /> {/* Icono Posts */}
+        Posts
       </Link>
     </>
   );

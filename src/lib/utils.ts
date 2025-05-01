@@ -108,3 +108,17 @@ export function getTextColor(bgColor: string) {
 
   return whiteContrast > blackContrast ? "#ffffff" : "#000000";
 }
+
+// Función para generar slugs amigables para URL
+export function slugify(text: string): string {
+  return text
+    .toString()
+    .toLowerCase()
+    .normalize("NFD") // Paso 1: Separar acentos y caracteres base (e.g., ó -> o + ´)
+    .replace(/[̀-ͯ]/g, "") // Paso 2: Eliminar las marcas diacríticas (acentos)
+    .replace(/\s+/g, "-") // Paso 3: Reemplazar espacios con -
+    .replace(/[^\w\-]+/g, "") // Paso 4: Eliminar caracteres no alfanuméricos restantes (excepto guiones)
+    .replace(/\-\-+/g, "-") // Paso 5: Reemplazar múltiples guiones con uno solo
+    .replace(/^-+/, "") // Paso 6: Eliminar guiones al principio
+    .replace(/-+$/, ""); // Paso 7: Eliminar guiones al final
+}

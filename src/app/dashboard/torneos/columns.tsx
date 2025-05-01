@@ -130,6 +130,22 @@ export const columns: ColumnDef<Torneo>[] = [
     cell: ({ row }) => {
       const torneo = row.original;
 
+      // Wrapper para asegurar compatibilidad de tipos con el diálogo
+      const handleDelete = (
+        id: string | number
+      ): Promise<{ success: boolean; message: string }> => {
+        if (typeof id === "number") {
+          return deleteTournamentAction(id);
+        } else {
+          // Manejar el caso si inesperadamente recibimos un string
+          console.error("ID inesperado de tipo string recibido:", id);
+          return Promise.resolve({
+            success: false,
+            message: "ID inválido (inesperado tipo string).",
+          });
+        }
+      };
+
       return (
         <div className="flex items-center justify-end gap-2">
           <Button variant="outline" className="h-6 w-6 p-0">
@@ -154,7 +170,7 @@ export const columns: ColumnDef<Torneo>[] = [
           <DeleteConfirmationDialog
             itemName={`el torneo "${torneo.name}"`}
             itemId={torneo.id}
-            deleteAction={deleteTournamentAction}
+            deleteAction={handleDelete}
             trigger={
               <Button
                 variant="destructive"

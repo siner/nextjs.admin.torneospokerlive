@@ -30,9 +30,44 @@
 - [ ] Implementar Server Action para creación masiva de torneos.
 - [ ] Integrar creación masiva en flujo de Eventos.
 
+### Feature: Gestión de Blog (Admin)
+
+- [x] Diseñar schema de base de datos para Posts, Categorías, Tags y Comentarios en Supabase.
+- [x] Crear migraciones de Supabase para las nuevas tablas del blog.
+- [x] Generar tipos de TypeScript a partir del nuevo schema.
+- [x] Definir y aplicar políticas RLS y permisos GRANT para todas las tablas del blog (permitir CRUD a usuarios autenticados/admin).
+- [x] CRUD Categorías:
+  - [x] Definir schema Zod para Categorías.
+  - [x] Crear Server Actions para CRUD de Categorías.
+  - [x] Crear DataTable para listar Categorías.
+  - [x] Crear Formulario para crear/editar Categorías.
+  - [x] Integrar listado y formulario en `/dashboard/blog/categorias`.
+- [x] CRUD Tags:
+  - [x] Definir schema Zod para Tags.
+  - [x] Crear Server Actions para CRUD de Tags.
+  - [x] Crear DataTable para listar Tags.
+  - [x] Crear Formulario para crear/editar Tags.
+  - [x] Integrar listado y formulario en `/dashboard/blog/tags`.
+- [x] CRUD Posts:
+  - [x] Definir schema Zod para Posts (incluir relaciones con Categoría y Tags, estado, etc.).
+  - [x] Crear Server Actions para CRUD de Posts.
+  - [x] Crear DataTable para listar Posts (mostrar título, categoría, estado, fecha).
+  - [x] Añadir columna con número de comentarios a DataTable de Posts.
+  - [x] Crear Formulario para crear/editar Posts (TipTap, selector categoría, multi-select tags, Cloudflare image upload, status).
+  - [x] Integrar listado y formulario en `/dashboard/blog/posts`.
+  - [x] Verificar que `upsertBlogPostAction` maneja correctamente `category_id = ""` (guardando `null`).
+- [x] Añadir DatePicker para `published_at` en formulario de Post.
+- [x] Añadir creación rápida de categorías desde formulario de Post (modal).
+- [x] Añadir creación rápida de tags desde formulario de Post (modal). -> Reemplazado por Dropdown con búsqueda ✅
+- [x] Gestión Comentarios (inicial):
+  - [x] Crear Server Action `deleteBlogCommentAction`.
+  - [x] Crear DataTable para listar Comentarios (con acción eliminar).
+  - [x] Integrar DataTable en página de edición del Post.
+
 ### Otros
 
 - [ ] (Opcional) Añadir tarea para implementar testing.
+- [ ] (Pendiente) Investigar/Solucionar obtención de autor en listado de comentarios.
 
 ## En Progreso (In Progress)
 
@@ -90,19 +125,21 @@
 
 ### Relevant Files
 
-- `src/lib/schemas.ts` - Definidos schemas Zod (`tournamentSchema`, `casinoSchema`, `eventSchema`, `circuitSchema`).
+- `src/lib/schemas.ts` - Definidos schemas Zod (`tournamentSchema`, `casinoSchema`, `eventSchema`, `circuitSchema`, `blogCategorySchema`, `blogTagSchema`).
 - `src/lib/actions/tournaments.ts` - Definidas Server Actions `upsertTournamentAction` y `deleteTournamentAction`.
 - `src/lib/actions/casinos.ts` - Definida Server Action `upsertCasinoAction`.
 - `src/lib/actions/events.ts` - Definidas Server Actions `upsertEventAction` y `deleteEventAction`.
 - `src/lib/actions/circuits.ts` - Definidas Server Actions `upsertCircuitAction` y `deleteCircuitAction`.
+- `src/lib/actions/blogCategories.ts` - Definidas Server Actions `upsertBlogCategoryAction` y `deleteBlogCategoryAction`.
+- `src/lib/actions/blogTags.ts` - Definidas Server Actions `upsertBlogTagAction` y `deleteBlogTagAction`.
 - `src/app/dashboard/torneos/edit/form-torneo.tsx` - Refactorizado para usar Server Action, Zod, `useFormState`, `useFormStatus`.
 - `src/app/dashboard/torneos/clone/form-clone-torneo.tsx` - Refactorizado para usar Server Action y mejoras de usabilidad.
 - `src/app/dashboard/casinos/edit/form-casino.tsx` - Refactorizado para usar Server Action (manteniendo subida logo en cliente).
 - `src/app/dashboard/eventos/edit/form-evento.tsx` - Refactorizado para usar Server Action, Zod, `useFormState`, `useFormStatus`.
 - `src/app/dashboard/circuitos/edit/form-circuito.tsx` - Refactorizado para usar Server Action, Zod, `useFormState`, `useFormStatus`.
-- `src/components/dialogs/delete-confirmation-dialog.tsx` - Modificado para aceptar prop `trigger` en lugar de renderizar botón interno.
+- `src/components/dialogs/delete-confirmation-dialog.tsx` - Modificado para aceptar `itemId` como `string | number`.
 - `src/app/dashboard/torneos/page.tsx` - Modificado para pasar lista de casinos y eventos a DataTable.
-- `src/app/dashboard/torneos/columns.tsx` - Añadido botón de eliminar con diálogo de confirmación en columna de acciones.
+- `src/app/dashboard/torneos/columns.tsx` - Añadido botón de eliminar con diálogo de confirmación en columna de acciones (con wrapper para ID number).
 - `src/app/dashboard/torneos/data-table.tsx` - Modificado para añadir filtros (Selects, DateRangePicker) y aceptar props.
 - `src/components/ui/date-range-picker.tsx` - Creado componente para seleccionar rango de fechas.
 - `src/app/dashboard/eventos/page.tsx` - Modificado para pasar lista de casinos y tours a DataTable.
@@ -110,3 +147,16 @@
 - `src/app/dashboard/eventos/data-table.tsx` - Modificado para añadir filtros (Selects, DateRangePicker) y aceptar props.
 - `src/app/dashboard/casinos/data-table.tsx` - Modificado para poner 50 items por página por defecto.
 - `src/app/dashboard/circuitos/columns.tsx` - Añadido DropdownMenu y opción Eliminar usando diálogo modificado.
+- `src/app/dashboard/blog/categorias/columns.tsx` - Creado para listar categorías (con wrapper para ID string).
+- `src/app/dashboard/blog/categorias/data-table.tsx` - Creado para mostrar tabla de categorías.
+- `src/app/dashboard/blog/categorias/edit/form-blog-category.tsx` - Creado formulario de categorías.
+- `src/app/dashboard/blog/categorias/page.tsx` - Creada página de listado de categorías.
+- `src/app/dashboard/blog/categorias/edit/page.tsx` - Creada página de creación de categorías.
+- `src/app/dashboard/blog/categorias/edit/[id]/page.tsx` - Creada página de edición de categorías.
+- `src/app/dashboard/blog/tags/columns.tsx` - Creado para listar tags.
+- `src/app/dashboard/blog/tags/data-table.tsx` - Creado para mostrar tabla de tags.
+- `src/app/dashboard/blog/tags/edit/form-blog-tag.tsx` - Creado formulario de tags.
+- `src/app/dashboard/blog/tags/page.tsx` - Creada página de listado de tags.
+- `src/app/dashboard/blog/tags/edit/page.tsx` - Creada página de creación de tags.
+- `src/app/dashboard/blog/tags/edit/[id]/page.tsx` - Creada página de edición de tags.
+- `src/app/dashboard/blog/posts/edit/form-blog-post.tsx` - Creado formulario de posts (con corrección error SelectItem "").

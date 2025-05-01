@@ -163,3 +163,96 @@ export const circuitSchema = z.object({
 });
 
 export type CircuitSchema = z.infer<typeof circuitSchema>;
+
+// Esquema para el formulario de Categoría del Blog
+export const blogCategorySchema = z.object({
+  id: z.string().uuid().optional(), // ID es UUID en Supabase
+
+  name: z
+    .string({ required_error: "El nombre es requerido." })
+    .min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
+
+  slug: z
+    .string({ required_error: "El slug es requerido." })
+    .min(3, { message: "El slug debe tener al menos 3 caracteres." })
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+      message: "Slug inválido (solo minúsculas, números y guiones).",
+    }),
+});
+
+export type BlogCategorySchema = z.infer<typeof blogCategorySchema>;
+
+// Esquema para el formulario de Tag del Blog
+export const blogTagSchema = z.object({
+  id: z.string().uuid().optional(), // ID es UUID en Supabase
+
+  name: z
+    .string({ required_error: "El nombre es requerido." })
+    .min(2, { message: "El nombre debe tener al menos 2 caracteres." }), // Tags pueden ser más cortos
+
+  slug: z
+    .string({ required_error: "El slug es requerido." })
+    .min(2, { message: "El slug debe tener al menos 2 caracteres." })
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+      message: "Slug inválido (solo minúsculas, números y guiones).",
+    }),
+});
+
+export type BlogTagSchema = z.infer<typeof blogTagSchema>;
+
+// Esquema para el formulario de Post del Blog
+export const blogPostSchema = z.object({
+  id: z.string().uuid().optional(), // ID para actualizaciones
+
+  title: z
+    .string({ required_error: "El título es requerido." })
+    .min(5, { message: "El título debe tener al menos 5 caracteres." }),
+
+  slug: z
+    .string({ required_error: "El slug es requerido." })
+    .min(5, { message: "El slug debe tener al menos 5 caracteres." })
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+      message: "Slug inválido (solo minúsculas, números y guiones).",
+    }),
+
+  // Contenido del editor (probablemente HTML)
+  content: z
+    .string({ required_error: "El contenido es requerido." })
+    .min(10, { message: "El contenido debe tener al menos 10 caracteres." }),
+
+  // ID de la categoría (opcional)
+  category_id: z
+    .string()
+    .uuid({ message: "ID de categoría inválido." })
+    .optional()
+    .nullable(),
+
+  // Array de IDs de tags seleccionados
+  tags: z
+    .array(z.string().uuid({ message: "ID de tag inválido." }))
+    .optional()
+    .default([]), // Por defecto, array vacío si no se seleccionan tags
+
+  // URL de la imagen destacada (opcional)
+  featured_image_url: z
+    .string()
+    .url({ message: "URL de imagen inválida." })
+    .optional()
+    .nullable(),
+
+  // Estado del post (draft por defecto en DB, pero validamos aquí)
+  status: z.enum(["draft", "published"], {
+    required_error: "El estado es requerido.",
+    invalid_type_error: "Estado inválido (debe ser 'draft' o 'published').",
+  }),
+
+  // Fecha de publicación (opcional, podría establecerse al publicar)
+  published_at: z.coerce // Usar coerce para convertir string ISO a Date
+    .date({ invalid_type_error: "Formato de fecha inválido." })
+    .optional()
+    .nullable(),
+
+  // author_id no se incluye aquí, se añadirá en la server action
+});
+
+export type BlogPostSchema = z.infer<typeof blogPostSchema>;

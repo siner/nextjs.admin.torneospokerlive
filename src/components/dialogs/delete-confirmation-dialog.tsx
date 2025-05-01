@@ -20,8 +20,10 @@ import { useToast } from "@/components/ui/use-toast";
 
 interface DeleteConfirmationDialogProps {
   itemName?: string;
-  deleteAction: (id: number) => Promise<{ success: boolean; message: string }>;
-  itemId: number;
+  deleteAction: (
+    id: string | number
+  ) => Promise<{ success: boolean; message: string }>;
+  itemId: string | number;
   trigger: React.ReactElement;
 }
 
