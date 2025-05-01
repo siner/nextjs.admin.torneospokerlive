@@ -139,8 +139,12 @@ export const columns: ColumnDef<Event>[] = [
       const evento = row.original;
 
       const handleDeleteWrapper = async (
-        id: number
+        id: string | number
       ): Promise<{ success: boolean; message: string }> => {
+        if (typeof id !== "number") {
+          console.error("ID de evento inválido (no es número):", id);
+          return { success: false, message: "ID inválido." };
+        }
         const result = await deleteEventAction(id);
         if (result.requiresConfirmation) {
           return {
