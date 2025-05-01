@@ -25,11 +25,9 @@ interface TiptapEditorProps {
 
 // Componente de la barra de herramientas
 const Toolbar = ({ editor }: { editor: Editor | null }) => {
-  if (!editor) {
-    return null;
-  }
-
   const setLink = useCallback(() => {
+    if (!editor) return;
+
     const previousUrl = editor.getAttributes("link").href;
     const url = window.prompt("URL", previousUrl);
 
@@ -41,7 +39,6 @@ const Toolbar = ({ editor }: { editor: Editor | null }) => {
     // empty
     if (url === "") {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
-
       return;
     }
 
@@ -57,6 +54,10 @@ const Toolbar = ({ editor }: { editor: Editor | null }) => {
       alert(e.message);
     }
   }, [editor]);
+
+  if (!editor) {
+    return null;
+  }
 
   return (
     <div className="border border-input bg-transparent rounded-t-md p-1 flex flex-wrap gap-1">
